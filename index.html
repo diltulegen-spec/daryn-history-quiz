@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>«Дарын» Олимпиадасы — Proctored System</title>
+  <style>
+    :root {
+      --daryn-blue: #003366;
+      --daryn-gold: #d4af37;
+      --text-dark: #2c3e50;
+      --success-green: #2e7d32;
+      --success-bg: #e8f5e9;
+      --danger-red: #c62828;
+      --danger-bg: #ffebee;
+      --selected-bg: #fff9db;
+      --selected-border: #f59f00;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #eef2f5;
+      color: var(--text-dark);
+      line-height: 1.6;
+      padding-bottom: 40px;
+    }
+
+    .permission-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--daryn-blue);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .permission-box {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid var(--daryn-gold);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+    }
+
+    .permission-box h2 {
+      color: var(--daryn-gold);
+      margin-bottom: 15px;
+    }
+
+    .start-btn {
+      background-color: var(--daryn-gold);
+      color: #000;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: transform 0.2s;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .cheat-warning-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(198, 40, 40, 0.95);
+      color: white;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      text-align: center;
+      padding: 20px;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--daryn-blue), #001f3f);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 5px solid var(--daryn-gold);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .webcam-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 160px;
+      height: 120px;
+      border: 3px solid var(--daryn-gold);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 5000;
+    }
+
+    .webcam-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .webcam-label {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: rgba(198, 40, 40, 0.8);
+      color: white;
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .quiz-container {
+      max-width: 950px;
+      margin: 25px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 1px solid #dcdcdc;
+    }
+
+    .quiz-header-bar {
+      background-color: #f8f9fa;
+      padding: 15px 25px;
+      border-bottom: 2px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .quiz-info {
+      font-weight: 600;
+      color: var(--daryn-blue);
+    }
+
+    .score-live {
+      background: var(--daryn-gold);
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .nav-panel {
+      padding: 15px 25px;
+      background-color: #f1f4f8;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .nav-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #bdc3c7;
+      background-color: white;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .nav-btn.active {
+      border: 2px solid var(--daryn-blue);
+      box-shadow: 0 0 5px rgba(0,51,102,0.5);
+    }
+
+    .nav-btn.correct-nav {
+      background-color: var(--success-green) !important;
+      color: white !important;
+      border-color: var(--success-green) !important;
+    }
+
+    .nav-btn.wrong-nav {
+      background-color: var(--danger-red) !important;
+      color: white !important;
+      border-color: var(--danger-red) !important;
+    }
+
+    .question-card {
+      padding: 25px 30px;
+      display: none;
+    }
+
+    .question-card.active {
+      display: block;
+    }
+
+    .q-number {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #fff;
+      background-color: var(--daryn-blue);
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    .q-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #1a252f;
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 18px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background-color: #fff;
+    }
+
+    .option-item:hover:not(.disabled) {
+      border-color: var(--daryn-blue);
+      background-color: #f7fafc;
+    }
+
+    .option-prefix {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--daryn-blue);
+      margin-right: 15px;
+      min-width: 35px;
+    }
+
+    .option-text {
+      font-size: 1.05rem;
+      flex-grow: 1;
+    }
+
+    .option-item.pre-selected {
+      border-color: var(--selected-border) !important;
+      background-color: var(--selected-bg) !important;
+      font-weight: 600;
+    }
+
+    .option-item.correct-choice {
+      border-color: var(--success-green) !important;
+      background-color: var(--success-bg) !important;
+      color: var(--success-green) !important;
+      font-weight: bold;
+    }
+
+    .option-item.wrong-choice {
+      border-color: var(--danger-red) !important;
+      background-color: var(--danger-bg) !important;
+      color: var(--danger-red) !important;
+    }
+
+    .option-item.disabled {
+      cursor: default;
+    }
+
+    .confirm-area {
+      margin-top: 18px;
+      display: none;
+    }
+
+    .btn-confirm {
+      background-color: #2b6cb0;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 0.98rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .feedback-box {
+      margin-top: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .feedback-box.correct-fb {
+      background-color: var(--success-bg);
+      border: 2px solid var(--success-green);
+      color: var(--success-green);
+    }
+
+    .feedback-box.wrong-fb {
+      background-color: var(--danger-bg);
+      border: 2px solid var(--danger-red);
+      color: #721c24;
+    }
+
+    .controls {
+      padding: 20px 30px;
+      background-color: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .btn-secondary { background-color: #718096; color: white; }
+    .btn-primary { background-color: var(--daryn-blue); color: white; }
+    .btn-submit { background-color: #27ae60; color: white; }
+
+    .results-screen {
+      padding: 30px;
+      display: none;
+      text-align: center;
+    }
+
+    .score-banner {
+      background: linear-gradient(135deg, var(--daryn-blue), #001f3f);
+      padding: 30px;
+      border-radius: 10px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .score-banner h2 { font-size: 2rem; color: var(--daryn-gold); }
+  </style>
+</head>
+<body oncontextmenu="return false;" onkeydown="return disableCopyKeys(event)">
+
+  <div class="permission-overlay" id="permissionOverlay">
+    <div class="permission-box">
+      <h2>«ДАРЫН» ОЛИМПИАДАСЫ</h2>
+      <p style="margin-bottom: 10px;">Онлайн сынақ бақылау жүйесі дайын.</p>
+      <ul style="text-align: left; margin-left: 20px; font-size: 0.95rem; margin-bottom: 15px;">
+        <li>1. Веб-камера арқылы тікелей бақылау</li>
+        <li>2. Толық экран режимі (Full Screen)</li>
+        <li>3. Терезеден шықпау ережесі</li>
+      </ul>
+      <button class="start-btn" id="startBtn" onclick="startProctoredQuiz()">ОЛИМПИАДАНЫ БАСТАУ 🚀</button>
+    </div>
+  </div>
+
+  <div class="cheat-warning-overlay" id="cheatOverlay">
+    <h2>⚠️ ЕСКЕРТУ! ЕРЕЖЕ БҰЗЫЛДЫ!</h2>
+    <p style="font-size: 1.2rem; margin-top: 15px;" id="warningText">Терезеден немесе толық экраннан шықтыңыз!</p>
+    <button class="start-btn" onclick="resumeQuiz()" style="margin-top: 25px;">ТЕСТКЕ ОРАЛУ ↩️</button>
+  </div>
+
+  <div class="webcam-container">
+    <div class="webcam-label">LIVE REC🔴</div>
+    <video id="webcam" autoplay playsinline muted></video>
+  </div>
+
+  <header>
+    <h1>ДАРЫН ОЛИМПИАДАСЫ — ҚАЗАҚСТАН ТАРИХЫ</h1>
+    <div style="font-size: 0.85rem; color: var(--daryn-gold);" id="cheatCounter">Ескертулер: 0 / 3</div>
+  </header>
+
+  <div class="quiz-container">
+    <div class="quiz-header-bar" id="headerBar">
+      <div class="quiz-info">Барлығы: 30 сұрақ</div>
+      <div class="score-live" id="liveScore">Дұрыс: 0 / 30</div>
+    </div>
+
+    <div class="nav-panel" id="navPanel"></div>
+
+    <div id="questionsContainer"></div>
+
+    <div class="controls" id="controlsBar">
+      <button class="btn btn-secondary" id="prevBtn" onclick="changeQuestion(-1)">← Алдыңғы</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="changeQuestion(1)">Келесі →</button>
+      <button class="btn btn-submit" id="submitBtn" onclick="finishQuiz()" style="display:none;">Қорытындылау</button>
+    </div>
+
+    <div class="results-screen" id="resultsScreen">
+      <div class="score-banner">
+        <h2>Олимпиада аяқталды!</h2>
+        <p id="scoreText">0 / 30 ұпай</p>
+      </div>
+      <button class="btn btn-primary" onclick="location.reload()">Қайта тапсыру 🔄</button>
+    </div>
+  </div>
+
+  <script>
+    const questionsData = [
+      { q: "1. Homo habilis ескі адам түрлерінің бірі білдіреді:", options: { A: "тік жүретін адам", B: "епті адам", C: "саналы адам", D: "еңбекқор адам" }, correct: "B", exp: "Homo habilis латын тілінен аударғанда «епті адам» дегенді білдіреді." },
+      { q: "2. Микролиттердің пайда болуына тән кезең:", options: { A: "палеолит", B: "Мезолит", C: "Неолит", D: "Қола дәуірі" }, correct: "B", exp: "Микролиттер (1-2 см тас құралдар) мезолит дәуірінің белгісі." },
+      { q: "3. Ботай тұрағы жататын дәуір:", options: { A: "Ерте палеолит", B: "Орта палеолит", C: "Кейінгі палеолит", D: "энеолит" }, correct: "D", exp: "Ботай тұрағы — энеолит (мыс-тас) дәуіріне жатады." },
+      { q: "4. Андронов мәдениетінің археологиялық белгісі:", options: { A: "Сырғалар мен кулондар", B: "Қанжарлар", C: "Тоғалар мен түйреуіштер", D: "Қаптаулар" }, correct: "A", exp: "Андроновтықтарда алтын және қола сырғалар кеңінен тараған." },
+      { q: "5. Алтын Ордадағы 1359-1379 жж. сипатталады:", options: { A: "Шарықтау кезеңі", B: "Темірланмен соғыс", C: "«Ұлы дүрбелең»", D: "Жаңа күшею" }, correct: "C", exp: "20-дан астам хан ауысқан саяси дағдарыс «Ұлы дүрбелең» деп аталады." },
+      { q: "6. Орыс жылнамаларында қыпшақтар аталды:", options: { A: "Половшылар", B: "Кумандар", C: "Саманидтер", D: "Татарлар" }, correct: "A", exp: "Орыс жылнамаларында қыпшақтар «половцы» деп аталды." },
+      { q: "7. «Алтын адам» жататын ғасыр:", options: { A: "б.з.д. VII ғ.", B: "б.з.д. ІІ ғ.", C: "б.з.д. V-IV ғасырлар", D: "б.з.д. I ғасыр" }, correct: "C", exp: "Есік қорғанынан табылған «Алтын адам» б.з.д. V-IV ғғ. жатады." },
+      { q: "8. Тасмола мәдениетінің аумағы:", options: { A: "Оңтүстік Қазақстан", B: "Орталық Қазақстан", C: "Солтүстік Қазақстан", D: "Батыс Қазақстан" }, correct: "B", exp: "Тасмола мәдениеті — Орталық Қазақстанда орналасқан." },
+      { q: "9. Түргеш қағанатының негізін салушы:", options: { A: "Білге қаған", B: "Бумын қаған", C: "Сұлу қаған", D: "Үшелік қаған" }, correct: "D", exp: "704 жылы Түргеш қағанатының негізін Үшелік қаған қалады." },
+      { q: "10. Ежелгі түркілердің киелі жануары:", options: { A: "қасқыр", B: "қыран", C: "барыс", D: "аю" }, correct: "A", exp: "Түркілер қасқырды (бөріні) өздерінің киелі тотемі санайтын." },
+      { q: "11. «Диуани лұғат-ат түрк» авторы:", options: { A: "Махмуд Қашқари", B: "Қожа Ахмет Яссауи", C: "Қорқыт ата", D: "Жүсіп Баласағұни" }, correct: "A", exp: "Махмуд Қашқари XI ғасырда «Диуани лұғат ат-түрк» еңбегін жазды." },
+      { q: "12. Моғолстан тарихына қатысты басты шығарма:", options: { A: "«Тарих-и Әбілқайыр хани»", B: "«Жамиғ ат-тауарих»", C: "«Тарих-и-Рашиди»", D: "«Диван лұғат ат-түрк»" }, correct: "C", exp: "Мұхаммед Хайдар Дулатидың «Тарих-и Рашиди» еңбегі Моғолстан тарихын сипаттайды." },
+      { q: "13. Қола дәуіріндегі шаруашылық өзгерісі:", options: { A: "Ауыл шаруашылығы", B: "Қолөнер", C: "Бау-бақша", D: "Көшпелі мал шаруашылығының басталуы" }, correct: "D", exp: "Қола дәуірі соңында көшпелі мал шаруашылығы қалыптасты." },
+      { q: "14. Сақ бұйымдарының стилі:", options: { A: "Соғдылық стиль", B: "Зороастризм", C: "Қытай стилі", D: "аң стилі" }, correct: "D", exp: "Сақтарда «аң стилі» кеңінен тараған." },
+      { q: "15. Неолит революциясының ерекшелігі:", options: { A: "аңшылыққа көшу", B: "өндіруші шаруашылыққа көшу", C: "меншіктеу экономикасы", D: "Темір дәуірі" }, correct: "B", exp: "Неолит революциясы — өндіруші экономикаға көшу." },
+      { q: "16. Әбілқайыр ханды Ресей бодандығына қабылдау жылы:", options: { A: "1751 ж.", B: "1789 ж.", C: "1784 ж.", D: "1731 жылы 19 ақпан" }, correct: "D", exp: "1731 жылы 19 ақпанда грамотаға қол қойылды." },
+      { q: "17. 18 ғ. Жоңғарлардың басты мақсаты:", options: { A: "Экономикалық байланыс", B: "Қазақ жерін өздеріне бағындыру", C: "Достық", D: "Ресеймен соғысу" }, correct: "B", exp: "Жоңғарлар Қазақ даласын толық бағындыруды көздеді." },
+      { q: "18. Кенесары хан деп жарияланған жыл:", options: { A: "1837 ж.", B: "1840 ж.", C: "1841 ж.", D: "1845 ж." }, correct: "C", exp: "1841 жылы Кенесары хан болып сайланды." },
+      { q: "19. 1886-1891 жж. ереже бойынша шексіз билік иесі:", options: { A: "Уез басшылары", B: "Әскери губернаторлар", C: "генерал-губернаторлар", D: "болыс сұлтандар" }, correct: "C", exp: "Шексіз билік генерал-губернаторда болды." },
+      { q: "20. Қазақ фольклорына 3-томын арнаған ғалым:", options: { A: "В.В. Бартольд", B: "А.Диваев", C: "Г.Н.Потанин", D: "В.В. Радлов" }, correct: "D", exp: "В.В. Радлов 3-томды қазақ фольклорына арнады." },
+      { q: "21. «Қырғыз-қайсақ даласын шолу» авторы:", options: { A: "Я.П. Гавердовский", B: "А.И. Левшин", C: "А.И. Добросмыслов", D: "М.М. Красовский" }, correct: "A", exp: "Я.П. Гавердовский — авторы." },
+      { q: "22. Екатерина II Нұралыны тақтан тайдыру бұйрығы:", options: { A: "1780 ж.", B: "1778 ж.", C: "1783 ж.", D: "3 шілде 1786 ж." }, correct: "D", exp: "1786 жылы 3 шілдеде рескриптке қол қойылды." },
+      { q: "23. «Қазақ» сөзі алғаш рет кездескен сөздік (1245 ж.):", options: { A: "Түркі-қытай", B: "Араб-қыпшақ сөздігі", C: "Қыпшақ-парсы", D: "Шағатай" }, correct: "B", exp: "1245 жылғы Араб-қыпшақ сөздігінде кездеседі." },
+      { q: "24. III Василиймен елшілік орнатқан хан:", options: { A: "Қасым хан", B: "Бұрындық хан", C: "Тәуке хан", D: "Хақназар хан" }, correct: "A", exp: "Қасым хан III Василиймен дипломатиялық қатынас жасады." },
+      { q: "25. Мал басынан алынатын салық:", options: { A: "тағар", B: "қалан", C: "құшыр", D: "зекет" }, correct: "D", exp: "Зекет — мал басынан алынатын салық." },
+      { q: "26. Андроновтықтардың негізгі белгісі:", options: { A: "ішкі инвентарь", B: "зергерлік бұйымдар", C: "петроглифтер", D: "жерлеу ғұрыптары мен қыш ыдыстар" }, correct: "D", exp: "Жерлеу салты мен өрнекті қыш ыдыстары." },
+      { q: "27. «Құдіретті ерлер» деп сақтарды атаған:", options: { A: "Үнді", B: "Парсы деректері", C: "Грек", D: "Қытай" }, correct: "B", exp: "Парсы жазбаларында сақтарды «құдіретті ерлер» деп атаған." },
+      { q: "28. Қаланың шахристан бөлігінде орналасқан:", options: { A: "қоғамдық, сауда және мәдени ғимараттар", B: "орталық", C: "шеткі бөлігі", D: "бекініс" }, correct: "A", exp: "Шахристан — әкімшілік және сауда орталығы." },
+      { q: "29. 1867-1868 жж. ең төменгі сот буыны:", options: { A: "Әскери сот", B: "билер мен қазылар соты", C: "облыстық сот", D: "уездік сот" }, correct: "B", exp: "Дәстүрлі билер мен қазылар соты сақталды." },
+      { q: "30. 'Ай-бозым', 'Ақ тентек' әндерінің авторы:", options: { A: "Біржан-сал Қожағұлұлы", B: "Жаяу Мұса", C: "Ақан сері", D: "Құрманғазы" }, correct: "A", exp: "Авторы — Біржан-сал Қожағұлұлы." }
+    ];
+
+    let currentQ = 0;
+    let tempSelections = new Array(questionsData.length).fill(null);
+    let confirmedAnswers = new Array(questionsData.length).fill(null);
+    let correctCount = 0;
+    let cheatCount = 0;
+    let quizActive = false;
+
+    async function startProctoredQuiz() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.getElementById('webcam');
+        video.srcObject = stream;
+        
+        document.getElementById('permissionOverlay').style.display = 'none';
+        
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        }
+        
+        quizActive = true;
+        initQuiz();
+        setupAntiCheatListeners();
+      } catch (err) {
+        alert("Камераға кіруге рұқсат қажет!");
+      }
+    }
+
+    function setupAntiCheatListeners() {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && quizActive) {
+          triggerCheatWarning("Сіз басқа вкладкаға немесе бағдарламаға өттіңіз!");
+        }
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement && quizActive) {
+          triggerCheatWarning("Толық экран режимінен шығуға тыйым салынады!");
+        }
+      });
+    }
+
+    function triggerCheatWarning(msg) {
+      cheatCount++;
+      document.getElementById('cheatCounter').innerText = `Ескертулер: ${cheatCount} / 3`;
+      
+      if (cheatCount >= 3) {
+        alert("Ережені 3 рет бұздыңыз! Тест автоматты түрде аяқталды.");
+        finishQuiz();
+        document.getElementById('cheatOverlay').style.display = 'none';
+      } else {
+        document.getElementById('warningText').innerText = `${msg}\nЕскерту №${cheatCount} (3 ескертуден соң тест жабылады)`;
+        document.getElementById('cheatOverlay').style.display = 'flex';
+      }
+    }
+
+    function resumeQuiz() {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+      document.getElementById('cheatOverlay').style.display = 'none';
+    }
+
+    function initQuiz() {
+      const navPanel = document.getElementById('navPanel');
+      const container = document.getElementById('questionsContainer');
+      navPanel.innerHTML = '';
+      container.innerHTML = '';
+
+      questionsData.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.id = `navBtn_${idx}`;
+        btn.innerText = idx + 1;
+        btn.onclick = () => showQuestion(idx);
+        navPanel.appendChild(btn);
+
+        const card = document.createElement('div');
+        card.className = `question-card ${idx === 0 ? 'active' : ''}`;
+        card.id = `qCard_${idx}`;
+
+        let optionsHtml = '';
+        for (const [key, val] of Object.entries(item.options)) {
+          optionsHtml += `
+            <div class="option-item" id="opt_${idx}_${key}" onclick="selectOption(${idx}, '${key}')">
+              <span class="option-prefix">[ ${key} ]</span>
+              <span class="option-text">${val}</span>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="q-number">Сұрақ ${idx + 1} / 30</div>
+          <div class="q-text">${item.q}</div>
+          <div class="options-list">${optionsHtml}</div>
+          <div class="confirm-area" id="confirmArea_${idx}">
+            <button class="btn-confirm" onclick="confirmAnswer(${idx})">✓ Жауапты растау (Подтвердить)</button>
+          </div>
+          <div class="feedback-box" id="feedback_${idx}">
+            <div class="fb-title" id="fbTitle_${idx}"></div>
+            <div class="fb-exp">${item.exp}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      showQuestion(0);
+    }
+
+    function showQuestion(index) {
+      document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      currentQ = index;
+      document.getElementById(`qCard_${index}`).classList.add('active');
+      document.getElementById(`navBtn_${index}`).classList.add('active');
+
+      document.getElementById('prevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+      if (index === questionsData.length - 1) {
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('submitBtn').style.display = 'block';
+      } else {
+        document.getElementById('nextBtn').style.display = 'block';
+        document.getElementById('submitBtn').style.display = 'none';
+      }
+    }
+
+    function selectOption(qIdx, optionKey) {
+      if (confirmedAnswers[qIdx] !== null) return;
+      tempSelections[qIdx] = optionKey;
+
+      const opts = document.querySelectorAll(`#qCard_${qIdx} .option-item`);
+      opts.forEach(o => o.classList.remove('pre-selected'));
+
+      document.getElementById(`opt_${qIdx}_${optionKey}`).classList.add('pre-selected');
+      document.getElementById(`confirmArea_${qIdx}`).style.display = 'block';
+    }
+
+    function confirmAnswer(qIdx) {
+      const selectedKey = tempSelections[qIdx];
+      if (!selectedKey) return;
+
+      confirmedAnswers[qIdx] = selectedKey;
+      const qData = questionsData[qIdx];
+      const isCorrect = selectedKey === qData.correct;
+
+      if (isCorrect) correctCount++;
+      document.getElementById('liveScore').innerText = `Дұрыс: ${correctCount} / 30`;
+
+      const opts = document.querySelectorAll(`#qCard_${qIdx} .option-item`);
+      opts.forEach(o => {
+        o.classList.remove('pre-selected');
+        o.classList.add('disabled');
+      });
+
+      document.getElementById(`confirmArea_${qIdx}`).style.display = 'none';
+
+      const selectedEl = document.getElementById(`opt_${qIdx}_${selectedKey}`);
+      if (isCorrect) {
+        selectedEl.classList.add('correct-choice');
+      } else {
+        selectedEl.classList.add('wrong-choice');
+        document.getElementById(`opt_${qIdx}_${qData.correct}`).classList.add('correct-choice');
+      }
+
+      const navBtn = document.getElementById(`navBtn_${qIdx}`);
+      if (isCorrect) {
+        navBtn.classList.add('correct-nav');
+      } else {
+        navBtn.classList.add('wrong-nav');
+      }
+
+      const fbBox = document.getElementById(`feedback_${qIdx}`);
+      const fbTitle = document.getElementById(`fbTitle_${qIdx}`);
+
+      if (isCorrect) {
+        fbBox.className = 'feedback-box correct-fb';
+        fbTitle.innerText = '✓ ДҰРЫС ЖАУАП!';
+      } else {
+        fbBox.className = 'feedback-box wrong-fb';
+        fbTitle.innerText = `✗ ҚАТЕ! (Дұрыс жауабы: [ ${qData.correct} ])`;
+      }
+      fbBox.style.display = 'block';
+    }
+
+    function changeQuestion(dir) {
+      const newIdx = currentQ + dir;
+      if (newIdx >= 0 && newIdx < questionsData.length) {
+        showQuestion(newIdx);
+      }
+    }
+
+    function finishQuiz() {
+      quizActive = false;
+      document.getElementById('headerBar').style.display = 'none';
+      document.getElementById('navPanel').style.display = 'none';
+      document.getElementById('questionsContainer').style.display = 'none';
+      document.getElementById('controlsBar').style.display = 'none';
+
+      document.getElementById('scoreText').innerText = `${correctCount} / 30 ұпай (${Math.round((correctCount/30)*100)}%)`;
+      document.getElementById('resultsScreen').style.display = 'block';
+
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => {});
+      }
+    }
+
+    function disableCopyKeys(e) {
+      if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 85 || e.keyCode === 83)) {
+        return false;
+      }
+      if (e.keyCode === 123) {
+        return false;
+      }
+    }
+  </script>
+</body>
+</html>
